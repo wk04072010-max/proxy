@@ -1,0 +1,33 @@
+version: '3.8'
+services:
+  nginx:
+    image: nginx:stable-alpine
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./nginx/htpasswd:/etc/nginx/.htpasswd:ro
+      - ./certs/fullchain.pem:/etc/ssl/certs/fullchain.pem:ro
+      - ./certs/privkey.pem:/etc/ssl/private/privkey.pem:ro
+    depends_on:
+      - proxy-backend
+      - render-service
+      - frontend
+
+  proxy-backend:
+    build: ./proxy-backend
+    environment:
+      - ALLOWED_HOSTS=example.com
+    networks: default
+
+  render-service:
+    build: ./render-service
+    environment:
+      - ALLOWED_HOSTS=example.com
+    shm_size: "1gb"
+    networks: default
+
+  frontend:
+    build: ./frontend
+    networks: default
